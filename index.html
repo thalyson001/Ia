@@ -1,0 +1,78 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IA de Persuasão</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .fade-in {
+      animation: fadeIn 1s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-blue-100 to-purple-200 min-h-screen flex items-center justify-center p-4">
+  <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md fade-in">
+    <h1 class="text-3xl font-bold mb-4 text-center text-blue-700">IA de Persuasão</h1>
+    <textarea id="input" rows="4" placeholder="Descreva sua situação..." class="w-full p-3 border-2 border-blue-200 rounded-xl mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"></textarea>
+    <button onclick="gerarResposta()" class="bg-blue-600 text-white px-4 py-2 rounded-xl w-full hover:bg-blue-700 transition font-medium">Gerar Dica</button>
+    <div id="resposta" class="mt-4 text-gray-800 whitespace-pre-line"></div>
+    <button id="copyBtn" onclick="copiarTexto()" class="mt-2 hidden bg-green-500 text-white px-4 py-2 rounded-xl w-full hover:bg-green-600 transition">Copiar Dica</button>
+  </div>
+
+  <script>
+    async function gerarResposta() {
+      const input = document.getElementById("input").value.trim();
+      const respostaDiv = document.getElementById("resposta");
+      const copyBtn = document.getElementById("copyBtn");
+
+      if (!input) {
+        respostaDiv.innerHTML = "<p class='text-red-600'>Por favor, descreva uma situação.</p>";
+        copyBtn.classList.add("hidden");
+        return;
+      }
+
+      respostaDiv.innerHTML = "<p class='text-gray-600'>Pensando...</p>";
+      copyBtn.classList.add("hidden");
+
+      try {
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer SUA_CHAVE_AQUI"
+          },
+          body: JSON.stringify({
+            model: "gpt-3.5-turbo",
+            messages: [{ role: "user", content: "Me dê uma dica de persuasão para essa situação: " + input }],
+            temperature: 0.8
+          })
+        });
+
+        const data = await response.json();
+        const resposta = data.choices?.[0]?.message?.content || "Não consegui gerar uma resposta.";
+
+        respostaDiv.innerHTML = resposta;
+        copyBtn.classList.remove("hidden");
+
+      } catch (error) {
+        respostaDiv.innerHTML = "<p class='text-red-600'>Erro ao gerar resposta.</p>";
+        copyBtn.classList.add("hidden");
+        console.error(error);
+      }
+    }
+
+    function copiarTexto() {
+      const text = document.getElementById("resposta").innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        alert("Dica copiada!");
+      });
+    }
+  </script>
+</body>
+</html>
